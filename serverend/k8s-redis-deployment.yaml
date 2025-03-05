@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gd-ms-redis
+  labels:
+    app: gd-ms-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gd-ms-redis
+  template:
+    metadata:
+      name: gd-ms-redis
+      labels:
+        app: gd-ms-redis
+    spec:
+      containers:
+        - name: gd-ms-redis
+          image: redis:7
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 6379
+      restartPolicy: Always

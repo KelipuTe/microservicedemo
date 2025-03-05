@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: gd-ms-mysql-claim
+spec:
+  storageClassName: gd-ms-mysql-claim
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  persistentVolumeReclaimPolicy: Delete
+  hostPath:
+    path: /ms/mysql/data
+    #path之前用过
+    #/mnt/data
+    #/ms/data
