@@ -3,13 +3,13 @@
 package main
 
 import (
-	"demo-golang/microservice/internal/repo"
-	"demo-golang/microservice/internal/repo/dao"
-	"demo-golang/microservice/internal/service"
-	"demo-golang/microservice/internal/web"
-	"demo-golang/microservice/ioc"
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
+	"microservicedemo/internal/repo"
+	"microservicedemo/internal/repo/dao"
+	"microservicedemo/internal/service"
+	"microservicedemo/internal/web"
+	"microservicedemo/ioc"
 )
 
 func InitServer() *gin.Engine {

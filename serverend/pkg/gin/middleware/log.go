@@ -27,31 +27,31 @@ func DefaultSaveLog(ctx context.Context, l LogData) {
 	log.Println("LogMiddleware", l)
 }
 
-type LogMiddlewareBuilder struct {
+type LogMidBuilder struct {
 	saveLog  howToSaveLog
 	saveReq  bool
 	saveResp bool
 }
 
-func NewLogMiddlewareBuilder(saveLog howToSaveLog) *LogMiddlewareBuilder {
-	return &LogMiddlewareBuilder{
+func NewLogMiddlewareBuilder(saveLog howToSaveLog) *LogMidBuilder {
+	return &LogMidBuilder{
 		saveLog:  saveLog,
 		saveReq:  false,
 		saveResp: false,
 	}
 }
 
-func (t *LogMiddlewareBuilder) SaveReq() *LogMiddlewareBuilder {
+func (t *LogMidBuilder) SaveReq() *LogMidBuilder {
 	t.saveReq = true
 	return t
 }
 
-func (t *LogMiddlewareBuilder) SaveResp() *LogMiddlewareBuilder {
+func (t *LogMidBuilder) SaveResp() *LogMidBuilder {
 	t.saveResp = true
 	return t
 }
 
-func (t *LogMiddlewareBuilder) Build() gin.HandlerFunc {
+func (t *LogMidBuilder) Build() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var logData = LogData{}
 
@@ -66,8 +66,8 @@ func (t *LogMiddlewareBuilder) Build() gin.HandlerFunc {
 
 		header := map[string][]string{}
 		for k, v := range ctx.Request.Header {
-			for _, vv := range v {
-				header[k] = append(header[k], vv)
+			for _, v2 := range v {
+				header[k] = append(header[k], v2)
 			}
 		}
 		logData.Header = header
@@ -75,8 +75,8 @@ func (t *LogMiddlewareBuilder) Build() gin.HandlerFunc {
 		if t.saveReq {
 			// Request.Body 是一个流，只能读一次。需要先读出来，然后再放回去。
 			body, _ := ctx.GetRawData()
-			ctx.Request.Body = io.NopCloser(bytes.NewReader(body))
 			logData.ReqData = string(body)
+			ctx.Request.Body = io.NopCloser(bytes.NewReader(body))
 		}
 
 		if t.saveResp {

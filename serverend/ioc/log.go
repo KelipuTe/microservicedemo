@@ -1,8 +1,8 @@
 package ioc
 
 import (
-	"demo-golang/microservice/pkg/logger"
 	"go.uber.org/zap"
+	"microservicedemo/pkg/logger"
 )
 
 func InitLog() logger.Logger {

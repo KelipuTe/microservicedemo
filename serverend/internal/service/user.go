@@ -2,15 +2,16 @@ package service
 
 import (
 	"context"
-	"demo-golang/microservice/internal/domain"
-	"demo-golang/microservice/internal/repo"
 	"errors"
 	"golang.org/x/crypto/bcrypt"
+	"microservicedemo/internal/domain"
+	"microservicedemo/internal/repo"
 )
 
 var (
-	ErrUserDuplicate         = repo.ErrUserDuplicate
-	ErrInvalidUserOrPassword = errors.New("用户名或者密码不对")
+	ErrUserDuplicate = repo.ErrUserDuplicate
+	ErrUserNotFound  = errors.New("用户不存在")
+	ErrWrongPassword = errors.New("密码错误")
 )
 
 type UserService struct {
@@ -36,17 +37,25 @@ func (t *UserService) Signup(ctx context.Context, u domain.User) error {
 	return err
 }
 
-func (t *UserService) Login(ctx context.Context, u domain.User) (domain.User, error) {
-	u2, err := t.repo.FindByUsername(ctx, u.Username)
+func (t *UserService) Login(ctx context.Context, name, pass string) (domain.User, error) {
+	u, err := t.repo.FindByUsername(ctx, name)
 	if errors.Is(err, repo.ErrUserNotFound) {
-		return domain.User{}, ErrInvalidUserOrPassword
+		return domain.User{}, ErrUserNotFound
 	}
 	if err != nil {
 		return domain.User{}, err
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(u2.Password), []byte(u.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(pass))
 	if err != nil {
-		return domain.User{}, ErrInvalidUserOrPassword
+		return domain.User{}, ErrWrongPassword
 	}
-	return u2, nil
+	return u, nil
+}
+
+func (t *UserService) FindByUserId(ctx context.Context, id int64) (domain.User, error) {
+	u, err := t.repo.FindByUserId(ctx, id)
+	if errors.Is(err, repo.ErrUserNotFound) {
+		return domain.User{}, ErrUserNotFound
+	}
+	return u, err
 }

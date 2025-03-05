@@ -1,11 +1,11 @@
 package web
 
 import (
-	"demo-golang/microservice/internal/domain"
-	"demo-golang/microservice/internal/service"
 	"errors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"microservicedemo/internal/domain"
+	"microservicedemo/internal/service"
 	"net/http"
 )
 
@@ -23,7 +23,12 @@ func (t *UserHandler) RegisterRoutes(server *gin.Engine) {
 	group := server.Group("/user")
 	group.POST("/signup", t.Signup)
 	group.POST("/login", t.Login)
-	group.POST("/profile", t.Profile)
+	group.POST("/signup_email", t.SignupEmail)
+	group.POST("/login_email", t.LoginEmail)
+	group.POST("/signup_sms", t.SignupSms)
+	group.POST("/login_sms", t.LoginSms)
+	group.GET("/profile", t.Profile)
+	group.POST("/logout", t.Logout)
 }
 
 type SignupReq struct {
@@ -69,13 +74,7 @@ func (t *UserHandler) Login(ctx *gin.Context) {
 	if err := ctx.BindJSON(&req); err != nil {
 		return
 	}
-
-	u := domain.User{
-		Username: req.Username,
-		Password: req.Password,
-	}
-
-	_, err := t.userSvc.Login(ctx, u)
+	u, err := t.userSvc.Login(ctx, req.Username, req.Password)
 	switch {
 	case err == nil:
 		sess := sessions.Default(ctx)
@@ -84,16 +83,59 @@ func (t *UserHandler) Login(ctx *gin.Context) {
 			MaxAge: 86400,
 		})
 		err = sess.Save()
+		if err != nil {
+			ctx.JSON(http.StatusOK, "系统错误")
+		}
 		ctx.JSON(http.StatusOK, "登录成功")
-	case errors.Is(err, service.ErrInvalidUserOrPassword):
+	case errors.Is(err, service.ErrWrongPassword):
 		ctx.JSON(http.StatusOK, err.Error())
 	default:
 		ctx.JSON(http.StatusOK, "系统错误")
 	}
 }
 
-func (t *UserHandler) Profile(ctx *gin.Context) {
+func (t *UserHandler) SignupEmail(ctx *gin.Context) {
+
+}
+func (t *UserHandler) LoginEmail(ctx *gin.Context) {
 
 }
 
-func (t *UserHandler) Logout(ctx *gin.Context) {}
+func (t *UserHandler) SignupSms(ctx *gin.Context) {
+
+}
+func (t *UserHandler) LoginSms(c *gin.Context) {
+
+}
+
+type ProfileResp struct {
+	Id       int64  `json:"id"`
+	Username string `json:"username"`
+}
+
+func (t *UserHandler) Profile(ctx *gin.Context) {
+	sess := sessions.Default(ctx)
+	userId, _ := sess.Get("userId").(int64)
+	u, err := t.userSvc.FindByUserId(ctx, userId)
+	switch {
+	case err == nil:
+		ctx.JSON(http.StatusOK, ProfileResp{
+			Id:       u.Id,
+			Username: u.Username,
+		})
+	default:
+		ctx.JSON(http.StatusOK, "系统错误")
+	}
+}
+
+func (t *UserHandler) Logout(ctx *gin.Context) {
+	session := sessions.Default(ctx)
+	session.Clear()
+	session.Options(sessions.Options{
+		MaxAge: -1,
+	})
+	err := session.Save()
+	if err != nil {
+		ctx.JSON(http.StatusOK, "系统错误")
+	}
+}

@@ -1,35 +1,47 @@
 <template>
     <div class="login">
+        <h2>login</h2>
         <p>
-            <span>用户名：{{ username }}</span>
+            <span>用户名：<input v-model="username"></span>
         </p>
         <p>
-            <span>密码：</span>
+            <span>密码：<input v-model="password"></span>
         </p>
-        <button @click="login">登录</button>
-
         <p>
-            <span>aa:{{ car.price }}</span>
+            <button @click="login">登录</button>
         </p>
     </div>
 </template>
 
 <script lang="ts" setup name="Login">
-import {ref,reactive} from 'vue'
 
-let username = ref("xhy")
-let car = reactive({price:100})
+import { ref, reactive } from 'vue'
+import axios from 'axios';
+import { useRouter } from 'vue-router';
 
+const router = useRouter()
 
-function login(){
-            alert("aaa");
-username.value="bbb"
-            Object.assign(car,{price:200})
-        }
+let username = ref("")
+let password = ref("")
+
+function login() {
+    axios.post('http://localhost:8080/user/login',
+        {
+            username: username.value,
+            password: password.value
+        }, { withCredentials: true })
+        .then(function (response) {
+            if (response.status == 200) {
+                router.push({ path: '/home' });
+            }
+        }).catch(function (error) {
+            console.log(error);
+        })
+}
 </script>
 
 <style>
-.login{
-    background-color:aqua
+.login {
+    border: 1px solid gray;
 }
 </style>

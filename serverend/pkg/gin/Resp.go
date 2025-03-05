@@ -1,4 +1,4 @@
-package gin2
+package gin
 
 type Resp struct {
 	Code int    `json:"code"`

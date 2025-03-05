@@ -2,10 +2,10 @@ package dao
 
 import (
 	"context"
-	"demo-golang/microservice/internal/repo/dao/model"
 	"errors"
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
+	"microservicedemo/internal/repo/dao/model"
 	"time"
 )
 
@@ -40,9 +40,18 @@ func (t *UserDao) Insert(ctx context.Context, u model.User) error {
 	return nil
 }
 
-func (t *UserDao) FindByUsername(ctx context.Context, username string) (model.User, error) {
+func (t *UserDao) FindByUsername(ctx context.Context, name string) (model.User, error) {
 	var u model.User
-	err := t.db.WithContext(ctx).Where("username = ?", username).First(&u).Error
+	err := t.db.WithContext(ctx).Where("username = ?", name).First(&u).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return model.User{}, ErrRecordNotFound
+	}
+	return u, err
+}
+
+func (t *UserDao) FindByUserId(ctx context.Context, id int64) (model.User, error) {
+	var u model.User
+	err := t.db.WithContext(ctx).Where("id = ?", id).First(&u).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return model.User{}, ErrRecordNotFound
 	}

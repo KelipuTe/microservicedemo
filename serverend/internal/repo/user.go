@@ -2,10 +2,10 @@ package repo
 
 import (
 	"context"
-	"demo-golang/microservice/internal/domain"
-	"demo-golang/microservice/internal/repo/dao"
-	"demo-golang/microservice/internal/repo/dao/model"
 	"errors"
+	"microservicedemo/internal/domain"
+	"microservicedemo/internal/repo/dao"
+	"microservicedemo/internal/repo/dao/model"
 )
 
 var (
@@ -29,15 +29,26 @@ func (t *UserRepo) Create(ctx context.Context, u domain.User) error {
 	return err
 }
 
-func (t *UserRepo) FindByUsername(ctx context.Context, username string) (domain.User, error) {
-	userModel, err := t.dao.FindByUsername(ctx, username)
+func (t *UserRepo) FindByUsername(ctx context.Context, name string) (domain.User, error) {
+	m, err := t.dao.FindByUsername(ctx, name)
 	if errors.Is(err, dao.ErrRecordNotFound) {
 		return domain.User{}, ErrUserNotFound
 	}
 	if err != nil {
 		return domain.User{}, err
 	}
-	return t.UserModelToDomain(userModel), nil
+	return t.UserModelToDomain(m), nil
+}
+
+func (t *UserRepo) FindByUserId(ctx context.Context, id int64) (domain.User, error) {
+	m, err := t.dao.FindByUserId(ctx, id)
+	if errors.Is(err, dao.ErrRecordNotFound) {
+		return domain.User{}, ErrUserNotFound
+	}
+	if err != nil {
+		return domain.User{}, err
+	}
+	return t.UserModelToDomain(m), nil
 }
 
 func (t *UserRepo) UserDomainToModel(u domain.User) model.User {

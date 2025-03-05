@@ -8,27 +8,27 @@ import (
 	"time"
 )
 
-type LoginCheckMiddlewareBuilder struct {
+type LoginCheckMidBuilder struct {
 	ignorePath map[string]string
 }
 
-func NewLoginCheckMiddlewareBuilder() *LoginCheckMiddlewareBuilder {
-	return &LoginCheckMiddlewareBuilder{
+func NewLoginCheckMidBuilder() *LoginCheckMidBuilder {
+	return &LoginCheckMidBuilder{
 		ignorePath: make(map[string]string),
 	}
 }
 
-func (t *LoginCheckMiddlewareBuilder) AddIgnorePath(path []string) *LoginCheckMiddlewareBuilder {
+func (t *LoginCheckMidBuilder) AddIgnorePath(path []string) *LoginCheckMidBuilder {
 	for _, val := range path {
 		t.ignorePath[val] = val
 	}
 	return t
 }
 
-func (t *LoginCheckMiddlewareBuilder) Build() gin.HandlerFunc {
+func (t *LoginCheckMidBuilder) Build() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		//不需要登录的路由
 		path := ctx.Request.URL.Path
-
 		_, ok := t.ignorePath[path]
 		if ok {
 			return
@@ -41,8 +41,13 @@ func (t *LoginCheckMiddlewareBuilder) Build() gin.HandlerFunc {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+		//检查一下userId对不对，这样业务代码就可以不用判断了
+		if _, ok := userId.(int64); !ok {
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
 
-		//每个小时刷新一次
+		//每1个小时刷新一次
 		now := time.Now()
 		const updatedAtKey = "updatedAt"
 		val := sess.Get(updatedAtKey)
