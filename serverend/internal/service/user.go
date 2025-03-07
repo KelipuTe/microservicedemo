@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"microservicedemo/internal/domain"
 	"microservicedemo/internal/repo"
@@ -24,13 +25,13 @@ func NewUserService(repo *repo.UserRepo) *UserService {
 	}
 }
 
-func (t *UserService) Signup(ctx context.Context, u domain.User) error {
-	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+func (t *UserService) Signup(ctx context.Context, d domain.User) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(d.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
-	u.Password = string(hash)
-	err = t.repo.Create(ctx, u)
+	d.Password = string(hash)
+	err = t.repo.Create(ctx, d)
 	if errors.Is(err, repo.ErrUserDuplicate) {
 		return ErrUserDuplicate
 	}
@@ -38,24 +39,40 @@ func (t *UserService) Signup(ctx context.Context, u domain.User) error {
 }
 
 func (t *UserService) Login(ctx context.Context, name, pass string) (domain.User, error) {
-	u, err := t.repo.FindByUsername(ctx, name)
+	d, err := t.repo.FindByUsername(ctx, name)
 	if errors.Is(err, repo.ErrUserNotFound) {
 		return domain.User{}, ErrUserNotFound
 	}
 	if err != nil {
 		return domain.User{}, err
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(pass))
+	err = bcrypt.CompareHashAndPassword([]byte(d.Password), []byte(pass))
 	if err != nil {
 		return domain.User{}, ErrWrongPassword
 	}
-	return u, nil
+	return d, nil
+}
+
+func (t *UserService) LoginEmail(ctx context.Context, email string) (domain.User, error) {
+	d, err := t.repo.FindOrCreateByEmail(ctx, email)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return d, nil
 }
 
 func (t *UserService) FindByUserId(ctx context.Context, id int64) (domain.User, error) {
-	u, err := t.repo.FindByUserId(ctx, id)
+	d, err := t.repo.FindByUserId(ctx, id)
 	if errors.Is(err, repo.ErrUserNotFound) {
 		return domain.User{}, ErrUserNotFound
 	}
-	return u, err
+	return d, err
+}
+
+func (t *UserService) LoginPhone(ctx *gin.Context, phone string) (domain.User, error) {
+	d, err := t.repo.FindOrCreateByPhone(ctx, phone)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return d, nil
 }

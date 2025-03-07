@@ -11,18 +11,29 @@ import (
 	"microservicedemo/internal/repo"
 	"microservicedemo/internal/repo/dao"
 	"microservicedemo/internal/service"
+	"microservicedemo/internal/service/verifycode"
 	"microservicedemo/internal/web"
 	"microservicedemo/ioc"
+	"microservicedemo/pkg/email/local"
 )
 
 // Injectors from wire.go:
 
 func InitServer() *gin.Engine {
+	cmdable := ioc.InitRedis()
 	db := ioc.InitGorm()
 	userDao := dao.NewUserDao(db)
 	userRepo := repo.NewUserRepo(userDao)
 	userService := service.NewUserService(userRepo)
-	userHandler := web.NewUserHandler(userService)
-	engine := ioc.InitWebServer(userHandler)
+	verifyCodeDao := dao.NewVerifyCodeDao(db)
+	verifyCode := repo.NewVerifyCodeRepo(verifyCodeDao)
+	email := local.NewEmailLocalService()
+	emailVerifyCodeSender := verifycode.NewEmailVerifyCodeSender(email)
+	emailVerifyCodeService := verifycode.NewEmailVerifyCodeService(verifyCode, emailVerifyCodeSender)
+	sms := ioc.InitSmsService(cmdable)
+	smsVerifyCodeSender := verifycode.NewSmsVerifyCodeSender(sms)
+	smsVerifyCodeService := verifycode.NewSmsVerifyCodeService(verifyCode, smsVerifyCodeSender)
+	userHandler := web.NewUserHandler(userService, emailVerifyCodeService, smsVerifyCodeService)
+	engine := ioc.InitWebServer(cmdable, userHandler)
 	return engine
 }

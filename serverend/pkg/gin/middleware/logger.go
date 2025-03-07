@@ -27,31 +27,31 @@ func DefaultSaveLog(ctx context.Context, l LogData) {
 	log.Println("LogMiddleware", l)
 }
 
-type LogMidBuilder struct {
+type LoggerMidBuilder struct {
 	saveLog  howToSaveLog
 	saveReq  bool
 	saveResp bool
 }
 
-func NewLogMiddlewareBuilder(saveLog howToSaveLog) *LogMidBuilder {
-	return &LogMidBuilder{
-		saveLog:  saveLog,
+func NewLoggerMidBuilder(h howToSaveLog) *LoggerMidBuilder {
+	return &LoggerMidBuilder{
+		saveLog:  h,
 		saveReq:  false,
 		saveResp: false,
 	}
 }
 
-func (t *LogMidBuilder) SaveReq() *LogMidBuilder {
+func (t *LoggerMidBuilder) SaveReq() *LoggerMidBuilder {
 	t.saveReq = true
 	return t
 }
 
-func (t *LogMidBuilder) SaveResp() *LogMidBuilder {
+func (t *LoggerMidBuilder) SaveResp() *LoggerMidBuilder {
 	t.saveResp = true
 	return t
 }
 
-func (t *LogMidBuilder) Build() gin.HandlerFunc {
+func (t *LoggerMidBuilder) Build() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var logData = LogData{}
 
